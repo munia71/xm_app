@@ -31,7 +31,11 @@ jobs:
         key: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
         script: |
           cd ${{ secrets.HOSTINGER_VPS_APP_DIR }}
-          echo "${{ secrets.API_ENV }}" > .env
-          npm install
-          npm run build || true
-          pm2 restart all || pm2 start server.js --name "exam-app"
+      echo "${{ secrets.API_ENV }}" > .env
+      npm install
+      npm run build --workspace=@expense-tracker/shared
+      npm run build --workspace=@expense-tracker/api
+      npm run build --workspace=@expense-tracker/ui
+      pm2 restart all || pm2 start server.js --name "exam-app"
+
+          
