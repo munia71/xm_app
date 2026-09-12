@@ -1,6 +1,42 @@
 name: Build
 
+name: CI/CD Pipeline
+
 on:
+  push:
+    branches: [ "main", "master", "develop" ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Copy files to VPS via SCP
+      uses: appleboy/scp-action@master
+      with:
+        host: ${{ secrets.HOSTINGER_VPS_HOST }}
+        port: ${{ secrets.HOSTINGER_VPS_PORT }}
+        username: ${{ secrets.HOSTINGER_VPS_USER }}
+        key: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
+        source: "."
+        target: ${{ secrets.HOSTINGER_VPS_APP_DIR }}
+
+    - name: Executing remote SSH commands
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOSTINGER_VPS_HOST }}
+        port: ${{ secrets.HOSTINGER_VPS_PORT }}
+        username: ${{ secrets.HOSTINGER_VPS_USER }}
+        key: ${{ secrets.HOSTINGER_VPS_SSH_KEY }}
+        script: |
+          cd ${{ secrets.HOSTINGER_VPS_APP_DIR }}
+          echo "${{ secrets.API_ENV }}" > .env
+          npm install
+          npm run build || true
+          pm2 restart all || pm2 start server.js --name "exam-app"on:
   push:
     branches: ['main', 'develop']
     paths-ignore:
